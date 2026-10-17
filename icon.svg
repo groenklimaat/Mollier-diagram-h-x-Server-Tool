@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <!-- Gradiënt voor de druppel (vochtigheid) -->
+    <linearGradient id="dropGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#0077b6"/>
+    </linearGradient>
+
+    <!-- Gradiënt voor de server (hardware) -->
+    <linearGradient id="serverGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#e94560"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Achtergrond (donkerblauw vierkant met afgeronde hoeken) -->
+  <rect x="0" y="0" width="100" height="100" rx="20" fill="#0a0a1a"/>
+
+  <!-- Grote waterdruppel (achtergrond) -->
+  <path d="M 50 15 C 50 15, 25 45, 25 65 C 25 80, 36 88, 50 88 C 64 88, 75 80, 75 65 C 75 45, 50 15, 50 15 Z"
+        fill="url(#dropGradient)" opacity="0.25"/>
+
+  <!-- Serverrack (drie gestapelde servers) -->
+  <rect x="30" y="42" width="40" height="9" rx="2" fill="url(#serverGradient)"/>
+  <rect x="30" y="54" width="40" height="9" rx="2" fill="url(#serverGradient)"/>
+  <rect x="30" y="66" width="40" height="9" rx="2" fill="url(#serverGradient)"/>
+
+  <!-- LED-lampjes op de servers -->
+  <circle cx="36" cy="46.5" r="1.5" fill="#00ff88"/>
+  <circle cx="36" cy="58.5" r="1.5" fill="#00ff88"/>
+  <circle cx="36" cy="70.5" r="1.5" fill="#00ff88"/>
+
+  <!-- Kleine ventilator/ventilatierooster suggestie -->
+  <circle cx="62" cy="46.5" r="3" fill="none" stroke="#0a0a1a" stroke-width="1"/>
+  <line x1="62" y1="43.5" x2="62" y2="49.5" stroke="#0a0a1a" stroke-width="1"/>
+  <line x1="59" y1="46.5" x2="65" y2="46.5" stroke="#0a0a1a" stroke-width="1"/>
+
+  <!-- Waterdruppel vooraan (highlight) -->
+  <path d="M 50 28 C 50 28, 42 42, 42 52 C 42 58, 46 62, 50 62 C 54 62, 58 58, 58 52 C 58 42, 50 28, 50 28 Z"
+        fill="#00d2ff" opacity="0.9"/>
+
+  <!-- Glans op de druppel -->
+  <ellipse cx="47" cy="45" rx="2" ry="4" fill="#ffffff" opacity="0.6"/>
+</svg>

@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#3de70d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mollier entalphie">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💧 Mollier h/x Server Tool</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0a0a1a;
+    color: #ffffff;
+    min-height: 100vh;
+    transition: direction 0.3s;
+  }
+  body[dir="rtl"] { font-family: 'Tahoma', Arial, sans-serif; }
+  
+  header {
+    background: #1a1a2e;
+    padding: 15px;
+    text-align: center;
+    border-bottom: 2px solid #e94560;
+    position: relative;
+  }
+  header h1 { color: #ffd700; font-size: 1.6em; margin-bottom: 5px; }
+  header p { color: #00d2ff; font-size: 0.9em; }
+  
+  .lang-selector {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #2d2d44;
+    color: white;
+    border: 1px solid #00d2ff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  body[dir="rtl"] .lang-selector { right: auto; left: 15px; }
+
+  .container {
+    display: grid;
+    grid-template-columns: 320px 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1200px) { .container { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: #1e3a5f;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .panel h2 {
+    color: #00d2ff;
+    font-size: 1.1em;
+    margin-bottom: 12px;
+    text-align: center;
+    border-bottom: 1px solid #2a5a8a;
+    padding-bottom: 8px;
+  }
+
+  .input-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+  .input-row label { font-size: 0.9em; flex: 1; }
+  .input-row input[type="number"] {
+    width: 80px;
+    padding: 6px;
+    background: #2d2d44;
+    color: #ffffff;
+    border: 1px solid #3a5a8a;
+    border-radius: 4px;
+    text-align: center;
+  }
+  .input-row span { font-size: 0.85em; color: #b0b0b0; min-width: 40px; }
+
+  input[type="range"] { width: 100%; margin: 5px 0 10px 0; accent-color: #e94560; }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+  }
+  button:hover { background: #ff5a75; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+  th {
+    background: #2a5a8a;
+    color: #ffd700;
+    padding: 8px 5px;
+    text-align: left;
+    font-size: 0.9em;
+  }
+  body[dir="rtl"] th { text-align: right; }
+  td { padding: 6px 5px; border-bottom: 1px solid #2a3a5a; }
+  td:nth-child(2) { text-align: right; font-weight: bold; color: #00ff88; }
+  body[dir="rtl"] td:nth-child(2) { text-align: left; }
+  
+  .warning-row td { background: #3d1f1f; color: #ff6b6b; }
+  .critical-row td { background: #3d1f3d; color: #ff6bff; }
+  .section-row td {
+    background: #2d1b4e;
+    color: #ffd700;
+    font-weight: bold;
+    text-align: center;
+    padding: 8px;
+  }
+
+  /* Server Lokaal Advies Box */
+  .server-box {
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 0.85em;
+    line-height: 1.5;
+    border-left: 4px solid #ffd700;
+    background: #1a1a2e;
+  }
+  body[dir="rtl"] .server-box { border-left: none; border-right: 4px solid #ffd700; }
+  
+  .server-box.ok { border-color: #00ff88; background: #1a3a2e; }
+  .server-box.warn { border-color: #ffd700; background: #3a2e1a; }
+  .server-box.bad { border-color: #ff6b6b; background: #3d1f1f; }
+
+  .info-box {
+    background: #1a1a2e;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 0.85em;
+    line-height: 1.5;
+  }
+  .info-box.green { border-left: 4px solid #00ff88; }
+  .info-box.red { border-left: 4px solid #ff6b6b; }
+  body[dir="rtl"] .info-box.green { border-left: none; border-right: 4px solid #00ff88; }
+  body[dir="rtl"] .info-box.red { border-left: none; border-right: 4px solid #ff6b6b; }
+
+  #canvas {
+    width: 100%;
+    height: 450px;
+    background: #0a0a1a;
+    border: 1px solid #2a5a8a;
+    border-radius: 6px;
+    display: block;
+  }
+
+  .status {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1a1a2e;
+    padding: 6px 12px;
+    font-size: 0.8em;
+    color: #b0b0b0;
+    border-top: 1px solid #2a5a8a;
+  }
+</style>
+</head>
+<body dir="ltr">
+
+<header>
+  <h1 id="ui-title">💧 Mollier h/x Server Tool</h1>
+  <p id="ui-subtitle">Luchtstroom, dauwpunt, condensatie en serverruimte-advies</p>
+  <select class="lang-selector" id="langSelect" onchange="changeLanguage(this.value)">
+    <option value="nl">🇳🇱 Nederlands</option>
+    <option value="en">🇬🇧 English</option>
+    <option value="fr">🇫🇷 Français</option>
+    <option value="de">🇩🇪 Deutsch</option>
+    <option value="es">🇪🇸 Español</option>
+    <option value="it">🇮🇹 Italiano</option>
+    <option value="fi">🇫🇮 Suomi</option>
+    <option value="no">🇳🇴 Norsk</option>
+    <option value="zh">🇨🇳 中文</option>
+    <option value="ja">🇯🇵 日本語</option>
+    <option value="vi">🇻🇳 Tiếng Việt</option>
+    <option value="pl">🇵🇱 Polski</option>
+    <option value="uk">🇺🇦 Українська</option>
+    <option value="ar">🇸🇦 العربية</option>
+  </select>
+</header>
+
+<div class="container">
+  <div class="panel">
+    <h2 id="ui-input-title">📊 Invoerparameters</h2>
+    <div class="input-row">
+      <label id="ui-flow-label">💨 Volumestroom</label>
+      <input type="number" id="flow" value="300" min="10" max="5000" step="10">
+      <span id="ui-flow-unit">m³/h</span>
+    </div>
+    <input type="range" id="flowSlider" min="10" max="2000" value="300" step="10">
+
+    <div class="input-row">
+      <label id="ui-temp-label">🌡️ Luchttemperatuur</label>
+      <input type="number" id="temp" value="22" min="-10" max="50" step="0.1">
+      <span id="ui-temp-unit">°C</span>
+    </div>
+    <input type="range" id="tempSlider" min="-10" max="50" value="22" step="0.5">
+
+    <div class="input-row">
+      <label id="ui-phi-label">💧 Relatieve vochtigheid</label>
+      <input type="number" id="phi" value="50" min="0" max="100" step="1">
+      <span id="ui-phi-unit">%</span>
+    </div>
+    <input type="range" id="phiSlider" min="0" max="100" value="50" step="1">
+
+    <div class="input-row">
+      <label id="ui-surf-label">❄️ Oppervlaktetemperatuur</label>
+      <input type="number" id="surf" value="10" min="-20" max="40" step="0.1">
+      <span id="ui-surf-unit">°C</span>
+    </div>
+    <input type="range" id="surfSlider" min="-20" max="40" value="10" step="0.5">
+
+    <button id="ui-calc-btn" onclick="bereken()">🚀 Bereken &amp; analyseer</button>
+  </div>
+
+  <div class="panel">
+    <h2 id="ui-results-title">📋 Psychrometrische eigenschappen</h2>
+    <table>
+      <thead>
+        <tr>
+          <th id="ui-th-qty">Grootheid</th>
+          <th id="ui-th-val">Waarde</th>
+          <th id="ui-th-unit">Eenheid</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+    
+    <!-- SERVER ADVIES BOX -->
+    <div class="server-box" id="serverBox">
+      <h3 id="ui-server-title">🖥️ Server Lokaal Advies</h3>
+      <div id="serverAdvice"></div>
+    </div>
+
+    <div class="info-box red" id="condBox">
+      <h3 id="ui-cond-title">💧 Condensatie-analyse</h3>
+      <div id="condInfo"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 id="ui-chart-title">📈 Mollier-diagram</h2>
+    <canvas id="canvas"></canvas>
+    <div class="info-box yellow">
+      <h3 id="ui-sum-title">🔍 Snelle samenvatting</h3>
+      <div id="summary"></div>
+    </div>
+  </div>
+</div>
+
+<div class="status" id="status">🌱 Klaar...</div>
+
+<script>
+/* =========================================================
+   1. VERTALINGEN (i18n)
+   ========================================================= */
+const TRANSLATIONS = {
+  nl: {
+    title: "💧 Mollier h/x Server Tool", subtitle: "Luchtstroom, dauwpunt, condensatie en serverruimte-advies",
+    inputTitle: "📊 Invoerparameters", flow: "💨 Volumestroom", temp: "🌡️ Luchttemperatuur",
+    phi: "💧 Relatieve vochtigheid", surf: "❄️ Oppervlaktetemperatuur", calc: "🚀 Bereken & analyseer",
+    resultsTitle: "📋 Psychrometrische eigenschappen", thQty: "Grootheid", thVal: "Waarde", thUnit: "Eenheid",
+    condTitle: "💧 Condensatie-analyse", chartTitle: "📈 Mollier-diagram", sumTitle: "🔍 Snelle samenvatting",
+    rows: ["Volumestroom", "Luchttemperatuur", "Relatieve vochtigheid", "Partiële waterdampspanning", "Absolute vochtigheid", "Enthalpie", "Dauwpuntstemperatuur", "Natte-bol temperatuur", "Dichtheid", "Massastroom lucht", "Waterstroom"],
+    condSection: "❄️ CONDENSATIE-ANALYSE", surfTemp: "Oppervlaktetemperatuur", condensation: "Condensatie", cooling: "Koelvermogen", status: "Status",
+    yes: "JA", no: "NEE", noCond: "✅ GEEN CONDENSATIE", yesCond: "⚠️ CONDENSATIE OPGETREDEN",
+    condAmount: "Condensatie:", day: "kg/dag", month: "kg/maand", deltaT: "ΔT = ",
+    legend: "LEGENDA", satLine: "φ = 100% (verzadiging)", phiLine: "φ = constant", dewLine: "Dauwpunt", condActive: "⚠️ Condensatie!",
+    ready: "🌱 Klaar voor berekening...", analyzed: "✅ Analyse: ",
+    serverTitle: "🖥️ Server Lokaal Advies",
+    serverOptimal: "🌟 OPTIMAAL: Jouw klimaat valt perfect binnen de ASHRAE-standaard (18-27°C, 45-55% RV).",
+    serverTooDry: "⚠️ TE DROOG: De luchtvochtigheid is onder 45%. Dit verhoogt de kans op elektrostatische ontlading (ESD) en schaadt servercomponenten.",
+    serverTooHumid: "⚠️ TE VOCHTIG: De luchtvochtigheid is boven 55%. Dit verhoogt het risico op corrosie en condensatie in serverracks.",
+    serverTooHot: "🔥 TE WARM: De temperatuur is boven 27°C. Dit verhoogt de kans op oververhitting en prestatieverlies van hardware.",
+    serverTooCold: "❄️ TE KOUD: De temperatuur is onder 18°C. Dit kan leiden tot condensatie als koude lucht warme lucht raakt.",
+    serverAdvies: "💡 Advies: Pas de luchtbehandeling aan om binnen 18-27°C en 45-55% RV te blijven voor optimale serverprestaties en een lange levensduur.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  en: {
+    title: "💧 Mollier h/x Server Tool", subtitle: "Airflow, dew point, condensation and server room advice",
+    inputTitle: "📊 Input Parameters", flow: "💨 Volume Flow", temp: "🌡️ Air Temperature",
+    phi: "💧 Relative Humidity", surf: "❄️ Surface Temperature", calc: "🚀 Calculate & Analyze",
+    resultsTitle: "📋 Psychrometric Properties", thQty: "Property", thVal: "Value", thUnit: "Unit",
+    condTitle: "💧 Condensation Analysis", chartTitle: "📈 Mollier Diagram", sumTitle: "🔍 Quick Summary",
+    rows: ["Volume Flow", "Air Temperature", "Relative Humidity", "Partial Vapor Pressure", "Absolute Humidity", "Enthalpy", "Dew Point", "Wet Bulb Temperature", "Density", "Air Mass Flow", "Water Flow"],
+    condSection: "❄️ CONDENSATION ANALYSIS", surfTemp: "Surface Temperature", condensation: "Condensation", cooling: "Cooling Capacity", status: "Status",
+    yes: "YES", no: "NO", noCond: "✅ NO CONDENSATION", yesCond: "⚠️ CONDENSATION OCCURRED",
+    condAmount: "Condensation:", day: "kg/day", month: "kg/month", deltaT: "ΔT = ",
+    legend: "LEGEND", satLine: "φ = 100% (saturation)", phiLine: "φ = constant", dewLine: "Dew Point", condActive: "⚠️ Condensation!",
+    ready: "🌱 Ready...", analyzed: "✅ Analysis: ",
+    serverTitle: "🖥️ Server Room Advice",
+    serverOptimal: "🌟 OPTIMAL: Your climate is within the ASHRAE standard (18-27°C, 45-55% RH).",
+    serverTooDry: "⚠️ TOO DRY: Humidity is below 45%. This increases electrostatic discharge (ESD) risk and damages server components.",
+    serverTooHumid: "⚠️ TOO HUMID: Humidity is above 55%. This increases the risk of corrosion and condensation in server racks.",
+    serverTooHot: "🔥 TOO HOT: Temperature is above 27°C. This increases the chance of overheating and hardware performance loss.",
+    serverTooCold: "❄️ TOO COLD: Temperature is below 18°C. This can lead to condensation when cold air meets warm air.",
+    serverAdvies: "💡 Advice: Adjust air treatment to stay within 18-27°C and 45-55% RH for optimal server performance and longevity.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  fr: {
+    title: "💧 Outil Mollier h/x pour serveurs", subtitle: "Débit d'air, point de rosée, condensation et conseils pour salle serveur",
+    inputTitle: "📊 Paramètres d'entrée", flow: "💨 Débit volumique", temp: "🌡️ Température de l'air",
+    phi: "💧 Humidité relative", surf: "❄️ Température de surface", calc: "🚀 Calculer & Analyser",
+    resultsTitle: "📋 Propriétés psychrométriques", thQty: "Propriété", thVal: "Valeur", thUnit: "Unité",
+    condTitle: "💧 Analyse de condensation", chartTitle: "📈 Diagramme de Mollier", sumTitle: "🔍 Résumé rapide",
+    rows: ["Débit volumique", "Température de l'air", "Humidité relative", "Pression partielle de vapeur", "Humidité absolue", "Enthalpie", "Point de rosée", "Température humide", "Densité", "Débit massique d'air", "Débit d'eau"],
+    condSection: "❄️ ANALYSE DE CONDENSATION", surfTemp: "Température de surface", condensation: "Condensation", cooling: "Puissance de refroidissement", status: "Statut",
+    yes: "OUI", no: "NON", noCond: "✅ PAS DE CONDENSATION", yesCond: "⚠️ CONDENSATION DÉTECTÉE",
+    condAmount: "Condensation:", day: "kg/jour", month: "kg/mois", deltaT: "ΔT = ",
+    legend: "LÉGENDE", satLine: "φ = 100% (saturation)", phiLine: "φ = constante", dewLine: "Point de rosée", condActive: "⚠️ Condensation!",
+    ready: "🌱 Prêt...", analyzed: "✅ Analyse: ",
+    serverTitle: "🖥️ Conseils pour Salle Serveur",
+    serverOptimal: "🌟 OPTIMAL : Votre climat respecte la norme ASHRAE (18-27°C, 45-55% HR).",
+    serverTooDry: "⚠️ TROP SEC : L'humidité est inférieure à 45%. Cela augmente le risque de décharge électrostatique (ESD) et endommage les composants.",
+    serverTooHumid: "⚠️ TROP HUMIDE : L'humidité est supérieure à 55%. Cela augmente le risque de corrosion et de condensation dans les baies.",
+    serverTooHot: "🔥 TROP CHAUD : La température est supérieure à 27°C. Risque de surchauffe et de perte de performance.",
+    serverTooCold: "❄️ TROP FROID : La température est inférieure à 18°C. Cela peut provoquer de la condensation.",
+    serverAdvies: "💡 Conseil : Ajustez le traitement de l'air pour rester entre 18-27°C et 45-55% HR pour des performances et une durée de vie optimales.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  de: {
+    title: "💧 Mollier h/x Server-Tool", subtitle: "Luftstrom, Taupunkt, Kondensation und Serverraum-Beratung",
+    inputTitle: "📊 Eingabeparameter", flow: "💨 Volumenstrom", temp: "🌡️ Lufttemperatur",
+    phi: "💧 Relative Luftfeuchtigkeit", surf: "❄️ Oberflächentemperatur", calc: "🚀 Berechnen & Analysieren",
+    resultsTitle: "📋 Psychrometrische Eigenschaften", thQty: "Eigenschaft", thVal: "Wert", thUnit: "Einheit",
+    condTitle: "💧 Kondensationsanalyse", chartTitle: "📈 Mollier-Diagramm", sumTitle: "🔍 Kurze Zusammenfassung",
+    rows: ["Volumenstrom", "Lufttemperatur", "Relative Luftfeuchtigkeit", "Partieller Dampfdruck", "Absolute Luftfeuchtigkeit", "Enthalpie", "Taupunkttemperatur", "Kugeltemperatur", "Dichte", "Luftmassenstrom", "Wasserstrom"],
+    condSection: "❄️ KONDENSATIONSANALYSE", surfTemp: "Oberflächentemperatur", condensation: "Kondensation", cooling: "Kühlleistung", status: "Status",
+    yes: "JA", no: "NEIN", noCond: "✅ KEINE KONDENSATION", yesCond: "⚠️ KONDENSATION AUFGETRETEN",
+    condAmount: "Kondensation:", day: "kg/Tag", month: "kg/Monat", deltaT: "ΔT = ",
+    legend: "LEGENDE", satLine: "φ = 100% (Sättigung)", phiLine: "φ = konstant", dewLine: "Taupunkt", condActive: "⚠️ Kondensation!",
+    ready: "🌱 Bereit...", analyzed: "✅ Analyse: ",
+    serverTitle: "🖥️ Serverraum-Beratung",
+    serverOptimal: "🌟 OPTIMAL: Ihr Klima entspricht dem ASHRAE-Standard (18-27°C, 45-55% rF).",
+    serverTooDry: "⚠️ ZU TROCKEN: Luftfeuchtigkeit unter 45%. Erhöht das Risiko elektrostatischer Entladungen (ESD) und schädigt Komponenten.",
+    serverTooHumid: "⚠️ ZU FEUCHT: Luftfeuchtigkeit über 55%. Erhöht das Risiko von Korrosion und Kondensation in Serverschränken.",
+    serverTooHot: "🔥 ZU HEISS: Temperatur über 27°C. Erhöht die Gefahr von Überhitzung und Leistungsverlust.",
+    serverTooCold: "❄️ ZU KALT: Temperatur unter 18°C. Dies kann zu Kondensation führen, wenn kalte auf warme Luft trifft.",
+    serverAdvies: "💡 Tipp: Passen Sie die Luftbehandlung an, um für optimale Leistung und Langlebigkeit zwischen 18-27°C und 45-55% rF zu bleiben.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  es: {
+    title: "💧 Herramienta Mollier h/x para servidores", subtitle: "Flujo de aire, punto de rocío, condensación y consejos para sala de servidores",
+    inputTitle: "📊 Parámetros de entrada", flow: "💨 Flujo volumétrico", temp: "🌡️ Temperatura del aire",
+    phi: "💧 Humedad relativa", surf: "❄️ Temperatura superficial", calc: "🚀 Calcular & Analizar",
+    resultsTitle: "📋 Propiedades psicrométricas", thQty: "Propiedad", thVal: "Valor", thUnit: "Unidad",
+    condTitle: "💧 Análisis de condensación", chartTitle: "📈 Diagrama de Mollier", sumTitle: "🔍 Resumen rápido",
+    rows: ["Flujo volumétrico", "Temperatura del aire", "Humedad relativa", "Presión parcial de vapor", "Humedad absoluta", "Entalpía", "Punto de rocío", "Temperatura de bulbo húmedo", "Densidad", "Flujo másico de aire", "Flujo de agua"],
+    condSection: "❄️ ANÁLISIS DE CONDENSACIÓN", surfTemp: "Temperatura superficial", condensation: "Condensación", cooling: "Capacidad de enfriamiento", status: "Estado",
+    yes: "SÍ", no: "NO", noCond: "✅ SIN CONDENSACIÓN", yesCond: "⚠️ CONDENSACIÓN OCURRIDA",
+    condAmount: "Condensación:", day: "kg/día", month: "kg/mes", deltaT: "ΔT = ",
+    legend: "LEYENDA", satLine: "φ = 100% (saturación)", phiLine: "φ = constante", dewLine: "Punto de rocío", condActive: "⚠️ ¡Condensación!",
+    ready: "🌱 Listo...", analyzed: "✅ Análisis: ",
+    serverTitle: "🖥️ Consejos para Sala de Servidores",
+    serverOptimal: "🌟 ÓPTIMO: Su clima cumple con el estándar ASHRAE (18-27°C, 45-55% HR).",
+    serverTooDry: "⚠️ DEMASIADO SECO: Humedad inferior al 45%. Aumenta el riesgo de descarga electrostática (ESD) y daña los componentes.",
+    serverTooHumid: "⚠️ DEMASIADO HÚMEDO: Humedad superior al 55%. Aumenta el riesgo de corrosión y condensación en los racks.",
+    serverTooHot: "🔥 DEMASIADO CALIENTE: Temperatura superior a 27°C. Mayor riesgo de sobrecalentamiento y pérdida de rendimiento.",
+    serverTooCold: "❄️ DEMASIADO FRÍO: Temperatura inferior a 18°C. Puede provocar condensación.",
+    serverAdvies: "💡 Consejo: Ajuste el tratamiento del aire para mantenerse entre 18-27°C y 45-55% HR para un rendimiento y vida útil óptimos.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  it: {
+    title: "💧 Strumento Mollier h/x per server", subtitle: "Portata d'aria, punto di rugiada, condensa e consigli per la sala server",
+    inputTitle: "📊 Parametri di input", flow: "💨 Portata volumetrica", temp: "🌡️ Temperatura dell'aria",
+    phi: "💧 Umidità relativa", surf: "❄️ Temperatura superficiale", calc: "🚀 Calcola & Analizza",
+    resultsTitle: "📋 Proprietà psicrometriche", thQty: "Proprietà", thVal: "Valore", thUnit: "Unità",
+    condTitle: "💧 Analisi della condensa", chartTitle: "📈 Diagramma di Mollier", sumTitle: "🔍 Riepilogo rapido",
+    rows: ["Portata volumetrica", "Temperatura dell'aria", "Umidità relativa", "Pressione parziale del vapore", "Umidità assoluta", "Entalpia", "Punto di rugiada", "Temperatura a bulbo umido", "Densità", "Portata massica dell'aria", "Portata d'acqua"],
+    condSection: "❄️ ANALISI DELLA CONDENSA", surfTemp: "Temperatura superficiale", condensation: "Condensa", cooling: "Capacità di raffreddamento", status: "Stato",
+    yes: "SÌ", no: "NO", noCond: "✅ NESSUNA CONDENSA", yesCond: "⚠️ CONDENSA RILEVATA",
+    condAmount: "Condensa:", day: "kg/giorno", month: "kg/mese", deltaT: "ΔT = ",
+    legend: "LEGENDA", satLine: "φ = 100% (saturazione)", phiLine: "φ = costante", dewLine: "Punto di rugiada", condActive: "⚠️ Condensa!",
+    ready: "🌱 Pronto...", analyzed: "✅ Analisi: ",
+    serverTitle: "🖥️ Consigli per la Sala Server",
+    serverOptimal: "🌟 OTTIMALE: Il tuo clima rientra nello standard ASHRAE (18-27°C, 45-55% UR).",
+    serverTooDry: "⚠️ TROPPO SECCO: Umidità inferiore al 45%. Aumenta il rischio di scariche elettrostatiche (ESD) e danneggia i componenti.",
+    serverTooHumid: "⚠️ TROPPO UMIDO: Umidità superiore al 55%. Aumenta il rischio di corrosione e condensa nei rack.",
+    serverTooHot: "🔥 TROPPO CALDO: Temperatura superiore a 27°C. Aumenta il rischio di surriscaldamento e perdita di prestazioni.",
+    serverTooCold: "❄️ TROPPO FREDDO: Temperatura inferiore a 18°C. Può causare condensa.",
+    serverAdvies: "💡 Consiglio: Regola il trattamento dell'aria per rimanere tra 18-27°C e 45-55% UR per prestazioni e longevità ottimali.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  fi: {
+    title: "💧 Mollier h/x -palvelintyökalu", subtitle: "Ilmavirta, kastepiste, kondensaatio ja palvelinhuoneen neuvonta",
+    inputTitle: "📊 Syöttöparametrit", flow: "💨 Tilavuusvirta", temp: "🌡️ Ilman lämpötila",
+    phi: "💧 Suhteellinen kosteus", surf: "❄️ Pintalämpötila", calc: "🚀 Laske & Analysoi",
+    resultsTitle: "📋 Psykrometriset ominaisuudet", thQty: "Ominaisuus", thVal: "Arvo", thUnit: "Yksikkö",
+    condTitle: "💧 Kondensaation analyysi", chartTitle: "📈 Mollier-diagrammi", sumTitle: "🔍 Nopea yhteenveto",
+    rows: ["Tilavuusvirta", "Ilman lämpötila", "Suhteellinen kosteus", "Osittainen höyrynpaine", "Absoluuttinen kosteus", "Entalpia", "Kastepiste", "Märkälämpötila", "Tiheys", "Ilman massavirta", "Vesivirta"],
+    condSection: "❄️ KONDENSAATION ANALYYSI", surfTemp: "Pintalämpötila", condensation: "Kondensaatio", cooling: "Jäähdytysteho", status: "Tila",
+    yes: "KYLLÄ", no: "EI", noCond: "✅ EI KONDENSAATIOTA", yesCond: "⚠️ KONDENSAATIOTA HAVAITTU",
+    condAmount: "Kondensaatio:", day: "kg/päivä", month: "kg/kuukausi", deltaT: "ΔT = ",
+    legend: "SELITE", satLine: "φ = 100% (kyllästys)", phiLine: "φ = vakio", dewLine: "Kastepiste", condActive: "⚠️ Kondensaatio!",
+    ready: "🌱 Valmis...", analyzed: "✅ Analyysi: ",
+    serverTitle: "🖥️ Palvelinhuoneen neuvonta",
+    serverOptimal: "🌟 OPTIMAALINEN: Ilmastosi on ASHRAE-standardin mukainen (18-27°C, 45-55% RH).",
+    serverTooDry: "⚠️ LIIAN KUIVA: Kosteus alle 45%. Lisää sähköstaattisen purkauksen (ESD) riskiä ja vahingoittaa komponentteja.",
+    serverTooHumid: "⚠️ LIIAN KOSTEA: Kosteus yli 55%. Lisää korroosion ja kondensaation riskiä palvelinkaapeissa.",
+    serverTooHot: "🔥 LIIAN KUMMA: Lämpötila yli 27°C. Lisää ylikuumenemisen ja suorituskyvyn menetyksen riskiä.",
+    serverTooCold: "❄️ LIIAN KYLMÄ: Lämpötila alle 18°C. Voi aiheuttaa kondensaatiota.",
+    serverAdvies: "💡 Neuvo: Säädä ilman käsittelyä pysyäksesi välillä 18-27°C ja 45-55% RH optimaalisen suorituskyvyn ja käyttöiän saavuttamiseksi.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  no: {
+    title: "💧 Mollier h/x-serververktøy", subtitle: "Luftstrøm, duggpunkt, kondensering og serverrområd",
+    inputTitle: "📊 Inndataparametere", flow: "💨 Volumstrøm", temp: "🌡️ Lufttemperatur",
+    phi: "💧 Relativ fuktighet", surf: "❄️ Overflatetemperatur", calc: "🚀 Beregn & Analyser",
+    resultsTitle: "📋 Psykrometriske egenskaper", thQty: "Egenskap", thVal: "Verdi", thUnit: "Enhet",
+    condTitle: "💧 Kondensanalyse", chartTitle: "📈 Mollier-diagram", sumTitle: "🔍 Rask oppsummering",
+    rows: ["Volumstrøm", "Lufttemperatur", "Relativ fuktighet", "Delvis damptrykk", "Absolutt fuktighet", "Entalpi", "Duggpunkt", "Våt kulpetemperatur", "Tetthet", "Luftmassestrøm", "Vannstrøm"],
+    condSection: "❄️ KONDENSANALYSE", surfTemp: "Overflatetemperatur", condensation: "Kondensering", cooling: "Kjølekapasitet", status: "Status",
+    yes: "JA", no: "NEI", noCond: "✅ INGEN KONDENS", yesCond: "⚠️ KONDENS OPPDAGET",
+    condAmount: "Kondens:", day: "kg/dag", month: "kg/måned", deltaT: "ΔT = ",
+    legend: "TEGNFORKLARING", satLine: "φ = 100% (metning)", phiLine: "φ = konstant", dewLine: "Duggpunkt", condActive: "⚠️ Kondens!",
+    ready: "🌱 Klar...", analyzed: "✅ Analyse: ",
+    serverTitle: "🖥️ Serverrområd",
+    serverOptimal: "🌟 OPTIMALT: Klimaet ditt er innenfor ASHRAE-standarden (18-27°C, 45-55% RF).",
+    serverTooDry: "⚠️ FOR TØRT: Fuktigheten er under 45%. Dette øker risikoen for elektrostatisk utladning (ESD) og skader komponenter.",
+    serverTooHumid: "⚠️ FOR FUKTIG: Fuktigheten er over 55%. Dette øker risikoen for korrosjon og kondens i serverracks.",
+    serverTooHot: "🔥 FOR VARMT: Temperaturen er over 27°C. Øker risikoen for overoppheting og ytelsestap.",
+    serverTooCold: "❄️ FOR KALDT: Temperaturen er under 18°C. Kan føre til kondens.",
+    serverAdvies: "💡 Råd: Juster luftbehandlingen for å holde deg innenfor 18-27°C og 45-55% RF for optimal ytelse og levetid.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  zh: {
+    title: "💧 莫里尔 h/x 服务器工具", subtitle: "气流、露点、冷凝和服务器机房建议",
+    inputTitle: "📊 输入参数", flow: "💨 体积流量", temp: "🌡️ 空气温度",
+    phi: "💧 相对湿度", surf: "❄️ 表面温度", calc: "🚀 计算与分析",
+    resultsTitle: "📋 湿空气特性", thQty: "属性", thVal: "值", thUnit: "单位",
+    condTitle: "💧 冷凝分析", chartTitle: "📈 莫里尔图", sumTitle: "🔍 快速摘要",
+    rows: ["体积流量", "空气温度", "相对湿度", "分压水蒸气", "绝对湿度", "焓", "露点温度", "湿球温度", "密度", "空气质量流量", "水流"],
+    condSection: "❄️ 冷凝分析", surfTemp: "表面温度", condensation: "冷凝", cooling: "冷却能力", status: "状态",
+    yes: "是", no: "否", noCond: "✅ 无冷凝", yesCond: "⚠️ 发生冷凝",
+    condAmount: "冷凝:", day: "kg/天", month: "kg/月", deltaT: "ΔT = ",
+    legend: "图例", satLine: "φ = 100% (饱和)", phiLine: "φ = 常数", dewLine: "露点", condActive: "⚠️ 冷凝!",
+    ready: "🌱 准备就绪...", analyzed: "✅ 分析: ",
+    serverTitle: "🖥️ 服务器机房建议",
+    serverOptimal: "🌟 最佳: 您的环境符合 ASHRAE 标准 (18-27°C, 45-55% RH)。",
+    serverTooDry: "⚠️ 太干燥: 湿度低于 45%。这会增加静电放电 (ESD) 风险并损坏服务器组件。",
+    serverTooHumid: "⚠️ 太潮湿: 湿度高于 55%。这会增加服务器机架腐蚀和冷凝的风险。",
+    serverTooHot: "🔥 太热: 温度高于 27°C。这会增加过热和硬件性能下降的风险。",
+    serverTooCold: "❄️ 太冷: 温度低于 18°C。这可能导致冷凝。",
+    serverAdvies: "💡 建议: 调整空气处理以保持在 18-27°C 和 45-55% RH 之间，以获得最佳的服务器性能和寿命。",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  ja: {
+    title: "💧 モリエル h/x サーバーツール", subtitle: "気流、露点、凝縮、サーバールームのアドバイス",
+    inputTitle: "📊 入力パラメータ", flow: "💨 体積流量", temp: "🌡️ 空気温度",
+    phi: "💧 相対湿度", surf: "❄️ 表面温度", calc: "🚀 計算と分析",
+    resultsTitle: "📋 湿り空気の特性", thQty: "特性", thVal: "値", thUnit: "単位",
+    condTitle: "💧 凝縮分析", chartTitle: "📈 モリエル線図", sumTitle: "🔍 クイックサマリー",
+    rows: ["体積流量", "空気温度", "相対湿度", "水蒸気分圧", "絶対湿度", "エンタルピー", "露点温度", "湿球温度", "密度", "空気質量流量", "水流"],
+    condSection: "❄️ 凝縮分析", surfTemp: "表面温度", condensation: "凝縮", cooling: "冷却能力", status: "状態",
+    yes: "はい", no: "いいえ", noCond: "✅ 凝縮なし", yesCond: "⚠️ 凝縮発生",
+    condAmount: "凝縮:", day: "kg/日", month: "kg/月", deltaT: "ΔT = ",
+    legend: "凡例", satLine: "φ = 100% (飽和)", phiLine: "φ = 一定", dewLine: "露点", condActive: "⚠️ 凝縮!",
+    ready: "🌱 準備完了...", analyzed: "✅ 分析: ",
+    serverTitle: "🖥️ サーバールームのアドバイス",
+    serverOptimal: "🌟 最適: あなたの環境は ASHRAE 規格 (18-27°C, 45-55% RH) に準拠しています。",
+    serverTooDry: "⚠️ 乾燥しすぎ: 湿度が45%未満です。静電気放電 (ESD) のリスクが高まり、コンポーネントを損傷します。",
+    serverTooHumid: "⚠️ 湿りすぎ: 湿度が55%を超えています。サーバーラックの腐食や結露のリスクが高まります。",
+    serverTooHot: "🔥 熱すぎる: 温度が27°Cを超えています。オーバーヒートや性能低下のリスクが高まります。",
+    serverTooCold: "❄️ 冷たすぎる: 温度が18°C未満です。結露を引き起こす可能性があります。",
+    serverAdvies: "💡 アドバイス: 最適なサーバーパフォーマンスと寿命のために、18-27°Cおよび45-55% RHの範囲内に保つように空調を調整してください。",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  vi: {
+    title: "💧 Công cụ Mollier h/x cho máy chủ", subtitle: "Lưu lượng khí, điểm sương, ngưng tụ và lời khuyên cho phòng máy chủ",
+    inputTitle: "📊 Thông số đầu vào", flow: "💨 Lưu lượng thể tích", temp: "🌡️ Nhiệt độ không khí",
+    phi: "💧 Độ ẩm tương đối", surf: "❄️ Nhiệt độ bề mặt", calc: "🚀 Tính toán & Phân tích",
+    resultsTitle: "📋 Tính chất tâm lý", thQty: "Tính chất", thVal: "Giá trị", thUnit: "Đơn vị",
+    condTitle: "💧 Phân tích ngưng tụ", chartTitle: "📈 Biểu đồ Mollier", sumTitle: "🔍 Tóm tắt nhanh",
+    rows: ["Lưu lượng thể tích", "Nhiệt độ không khí", "Độ ẩm tương đối", "Áp suất hơi riêng phần", "Độ ẩm tuyệt đối", "Entanpi", "Điểm sương", "Nhiệt độ bầu ướt", "Mật độ", "Lưu lượng khối không khí", "Lưu lượng nước"],
+    condSection: "❄️ PHÂN TÍCH NGƯNG TỤ", surfTemp: "Nhiệt độ bề mặt", condensation: "Ngưng tụ", cooling: "Công suất làm mát", status: "Trạng thái",
+    yes: "CÓ", no: "KHÔNG", noCond: "✅ KHÔNG NGƯNG TỤ", yesCond: "⚠️ ĐÃ NGƯNG TỤ",
+    condAmount: "Ngưng tụ:", day: "kg/ngày", month: "kg/tháng", deltaT: "ΔT = ",
+    legend: "CHÚ GIẢI", satLine: "φ = 100% (bão hòa)", phiLine: "φ = không đổi", dewLine: "Điểm sương", condActive: "⚠️ Ngưng tụ!",
+    ready: "🌱 Sẵn sàng...", analyzed: "✅ Phân tích: ",
+    serverTitle: "🖥️ Lời khuyên cho Phòng Máy chủ",
+    serverOptimal: "🌟 TỐI ƯU: Khí hậu của bạn nằm trong tiêu chuẩn ASHRAE (18-27°C, 45-55% RH).",
+    serverTooDry: "⚠️ QUÁ KHÔ: Độ ẩm dưới 45%. Điều này làm tăng nguy cơ phóng điện tĩnh (ESD) và làm hỏng linh kiện máy chủ.",
+    serverTooHumid: "⚠️ QUÁ ẨM: Độ ẩm trên 55%. Điều này làm tăng nguy cơ ăn mòn và ngưng tụ trong tủ rack máy chủ.",
+    serverTooHot: "🔥 QUÁ NÓNG: Nhiệt độ trên 27°C. Điều này làm tăng nguy cơ quá nhiệt và giảm hiệu suất phần cứng.",
+    serverTooCold: "❄️ QUÁ LẠNH: Nhiệt độ dưới 18°C. Điều này có thể dẫn đến ngưng tụ khi không khí lạnh gặp không khí ấm.",
+    serverAdvies: "💡 Lời khuyên: Điều chỉnh xử lý không khí để duy trì trong khoảng 18-27°C và 45-55% RH nhằm đạt hiệu suất và tuổi thọ máy chủ tối ưu.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  pl: {
+    title: "💧 Narzędzie Mollier h/x dla serwerowni", subtitle: "Przepływ powietrza, punkt rosy, kondensacja i porady dotyczące serwerowni",
+    inputTitle: "📊 Parametry wejściowe", flow: "💨 Przepływ objętościowy", temp: "🌡️ Temperatura powietrza",
+    phi: "💧 Wilgotność względna", surf: "❄️ Temperatura powierzchni", calc: "🚀 Oblicz & Analizuj",
+    resultsTitle: "📋 Właściwości psychrometryczne", thQty: "Właściwość", thVal: "Wartość", thUnit: "Jednostka",
+    condTitle: "💧 Analiza kondensacji", chartTitle: "📈 Wykres Molliera", sumTitle: "🔍 Szybkie podsumowanie",
+    rows: ["Przepływ objętościowy", "Temperatura powietrza", "Wilgotność względna", "Ciśnienie cząstkowe pary", "Wilgotność bezwzględna", "Entalpia", "Punkt rosy", "Temperatura mokrego termometru", "Gęstość", "Masowy przepływ powietrza", "Przepływ wody"],
+    condSection: "❄️ ANALIZA KONDENSACJI", surfTemp: "Temperatura powierzchni", condensation: "Kondensacja", cooling: "Wydajność chłodzenia", status: "Status",
+    yes: "TAK", no: "NIE", noCond: "✅ BRAK KONDENSACJI", yesCond: "⚠️ WYSTĄPIŁA KONDENSACJA",
+    condAmount: "Kondensacja:", day: "kg/dzień", month: "kg/miesiąc", deltaT: "ΔT = ",
+    legend: "LEGENDA", satLine: "φ = 100% (nasycenie)", phiLine: "φ = stała", dewLine: "Punkt rosy", condActive: "⚠️ Kondensacja!",
+    ready: "🌱 Gotowy...", analyzed: "✅ Analiza: ",
+    serverTitle: "🖥️ Porady dla Serwerowni",
+    serverOptimal: "🌟 OPTYMALNIE: Twój klimat mieści się w normie ASHRAE (18-27°C, 45-55% RH).",
+    serverTooDry: "⚠️ ZBYT SUCHO: Wilgotność poniżej 45%. Zwiększa to ryzyko wyładowań elektrostatycznych (ESD) i uszkodzenia komponentów.",
+    serverTooHumid: "⚠️ ZBYT WILGOTNO: Wilgotność powyżej 55%. Zwiększa to ryzyko korozji i kondensacji w szafach serwerowych.",
+    serverTooHot: "🔥 ZBYT GORĄCO: Temperatura powyżej 27°C. Zwiększa ryzyko przegrzania i utraty wydajności sprzętu.",
+    serverTooCold: "❄️ ZBYT ZIMNO: Temperatura poniżej 18°C. Może to prowadzić do kondensacji.",
+    serverAdvies: "💡 Porada: Dostosuj uzdatnianie powietrza, aby utrzymać 18-27°C i 45-55% RH dla optymalnej wydajności i żywotności serwerów.",
+    units: { m3h: "m³/h", c: "°C", pct: "%", pa: "Pa", kgkg: "kg/kg", kjkg: "kJ/kg", kgm3: "kg/m³", kgh: "kg/h", kw: "kW" }
+  },
+  uk: {
+    title: "💧 Інструмент Mollier h/x для серверних", subtitle: "Потік повітря, точка роси, конденсація та поради для серверної",
+    inputTitle: "📊 Вхідні параметри", flow: "💨 Об'ємний потік", temp: "🌡️ Температура повітря",
+    phi: "💧 Відносна вологість", surf: "❄️ Температура поверхні", calc: "🚀 Розрахувати & Аналізувати",
+    resultsTitle: "📋 Психрометричні властивості", thQty: "Властивість", thVal: "Значення", thUnit: "Одиниця",
+    condTitle: "💧 Аналіз конденсації", chartTitle: "📈 Діаграма Мольє", sumTitle: "🔍 Швидкий підсумок",
+    rows: ["Об'ємний потік", "Температура повітря", "Відносна вологість", "Парціальний тиск пари", "Абсолютна вологість", "Ентальпія", "Точка роси", "Температура вологого термометра", "Щільність", "Масова витрата повітря", "Потік води"],
+    condSection: "❄️ АНАЛІЗ КОНДЕНСАЦІЇ", surfTemp: "Температура поверхні", condensation: "Конденсація", cooling: "Потужність охолодження", status: "Статус",
+    yes: "ТАК", no: "НІ", noCond: "✅ БЕЗ КОНДЕНСАЦІЇ", yesCond: "⚠️ ВИНИКЛА КОНДЕНСАЦІЯ",
+    condAmount: "Конденсація:", day: "кг/день", month: "кг/місяць", deltaT: "ΔT = ",
+    legend: "ЛЕГЕНДА", satLine: "φ = 100% (насичення)", phiLine: "φ = стала", dewLine: "Точка роси", condActive: "⚠️ Конденсація!",
+    ready: "🌱 Готово...", analyzed: "✅ Аналіз: ",
+    serverTitle: "🖥️ Поради для Серверної",
+    serverOptimal: "🌟 ОПТИМАЛЬНО: Ваш клімат відповідає стандарту ASHRAE (18-27°C, 45-55% RH).",
+    serverTooDry: "⚠️ ЗАСУХО: Вологість нижче 45%. Це підвищує ризик електростатичного розряду (ESD) та пошкодження компонентів.",
+    serverTooHumid: "⚠️ ЗАВОЛОГО: Вологість вище 55%. Це підвищує ризик корозії та конденсації в серверних стійках.",
+    serverTooHot: "🔥 ЗАНАДТО ГАРЯЧЕ: Температура вище 27°C. Підвищується ризик перегріву та втрати продуктивності.",
+    serverTooCold: "❄️ ЗАНАДТО ХОЛОДНО: Температура нижче 18°C. Це може призвести до конденсації.",
+    serverAdvies: "💡 Порада: Відрегулюйте обробку повітря, щоб підтримувати 18-27°C та 45-55% RH для оптимальної продуктивності та довговічності серверів.",
+    units: { m3h: "м³/год", c: "°C", pct: "%", pa: "Па", kgkg: "кг/кг", kjkg: "кДж/кг", kgm3: "кг/м³", kgh: "кг/год", kw: "кВт" }
+  },
+  ar: {
+    title: "💧 أداة مولير h/x لخادم", subtitle: "تدفق الهواء، نقطة الندى، التكاثف ونصائح لغرفة الخادم",
+    inputTitle: "📊 معلمات الإدخال", flow: "💨 التدفق الحجمي", temp: "🌡️ درجة حرارة الهواء",
+    phi: "💧 الرطوبة النسبية", surf: "❄️ درجة حرارة السطح", calc: "🚀 حساب وتحليل",
+    resultsTitle: "📋 الخصائص السيكرومترية", thQty: "الخاصية", thVal: "القيمة", thUnit: "الوحدة",
+    condTitle: "💧 تحليل التكاثف", chartTitle: "📈 مخطط مولير", sumTitle: "🔍 ملخص سريع",
+    rows: ["التدفق الحجمي", "درجة حرارة الهواء", "الرطوبة النسبية", "ضغط البخار الجزئي", "الرطوبة المطلقة", "المحتوى الحراري", "نقطة الندى", "درجة حرارة المصباح الرطب", "الكثافة", "تدفق كتلة الهواء", "تدفق الماء"],
+    condSection: "❄️ تحليل التكاثف", surfTemp: "درجة حرارة السطح", condensation: "التكاثف", cooling: "قدرة التبريد", status: "الحالة",
+    yes: "نعم", no: "لا", noCond: "✅ لا يوجد تكاثف", yesCond: "⚠️ حدث تكاثف",
+    condAmount: "التكاثف:", day: "كجم/يوم", month: "كجم/شهر", deltaT: "ΔT = ",
+    legend: "وسيلة الإيضاح", satLine: "φ = 100% (تشبع)", phiLine: "φ = ثابت", dewLine: "نقطة الندى", condActive: "⚠️ تكاثف!",
+    ready: "🌱 جاهز...", analyzed: "✅ تحليل: ",
+    serverTitle: "🖥️ نصائح لغرفة الخادم",
+    serverOptimal: "🌟 مثالي: مناخك يقع ضمن معيار ASHRAE (18-27°C، 45-55% RH).",
+    serverTooDry: "⚠️ جاف جداً: الرطوبة أقل من 45%. يزيد هذا من خطر التفريغ الكهروستاتيكي (ESD) ويضر بمكونات الخادم.",
+    serverTooHumid: "⚠️ رطب جداً: الرطوبة أعلى من 55%. يزيد هذا من خطر التآكل والتكاثف في رفوف الخادم.",
+    serverTooHot: "🔥 حار جداً: درجة الحرارة أعلى من 27°C. يزيد من خطر ارتفاع درجة الحرارة وفقدان الأداء.",
+    serverTooCold: "❄️ بارد جداً: درجة الحرارة أقل من 18°C. قد يؤدي إلى التكاثف.",
+    serverAdvies: "💡 نصيحة: اضبط معالجة الهواء للبقاء ضمن 18-27°C و45-55% RH للحصول على أداء مثالي وعمر افتراضي طويل للخادم.",
+    units: { m3h: "م³/ساعة", c: "°C", pct: "%", pa: "باسكال", kgkg: "كجم/كجم", kjkg: "كيلوجول/كجم", kgm3: "كجم/م³", kgh: "كجم/ساعة", kw: "كيلوواط" }
+  }
+};
+
+let currentLang = 'nl';
+
+function changeLanguage(langCode) {
+  currentLang = langCode;
+  const t = TRANSLATIONS[langCode];
+  
+  if (langCode === 'ar') {
+    document.body.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('lang', 'ar');
+  } else {
+    document.body.setAttribute('dir', 'ltr');
+    document.documentElement.setAttribute('lang', langCode);
+  }
+
+  document.getElementById('ui-title').innerHTML = t.title;
+  document.getElementById('ui-subtitle').innerHTML = t.subtitle;
+  document.getElementById('ui-input-title').innerHTML = t.inputTitle;
+  document.getElementById('ui-flow-label').innerHTML = t.flow;
+  document.getElementById('ui-flow-unit').innerHTML = t.units.m3h;
+  document.getElementById('ui-temp-label').innerHTML = t.temp;
+  document.getElementById('ui-temp-unit').innerHTML = t.units.c;
+  document.getElementById('ui-phi-label').innerHTML = t.phi;
+  document.getElementById('ui-phi-unit').innerHTML = t.units.pct;
+  document.getElementById('ui-surf-label').innerHTML = t.surf;
+  document.getElementById('ui-surf-unit').innerHTML = t.units.c;
+  document.getElementById('ui-calc-btn').innerHTML = t.calc;
+  document.getElementById('ui-results-title').innerHTML = t.resultsTitle;
+  document.getElementById('ui-th-qty').innerHTML = t.thQty;
+  document.getElementById('ui-th-val').innerHTML = t.thVal;
+  document.getElementById('ui-th-unit').innerHTML = t.thUnit;
+  document.getElementById('ui-cond-title').innerHTML = t.condTitle;
+  document.getElementById('ui-chart-title').innerHTML = t.chartTitle;
+  document.getElementById('ui-sum-title').innerHTML = t.sumTitle;
+  document.getElementById('ui-server-title').innerHTML = t.serverTitle;
+  
+  bereken();
+}
+
+/* =========================================================
+   2. PSYCHROMETRIE (Ongewijzigd)
+   ========================================================= */
+const PSY = {
+  p_atm: 101325, c_pa: 1.006, h_we: 2501, c_pv: 1.86, R_lucht: 287.05,
+  p_sat(T) { return 610.78 * Math.exp(17.27 * T / (T + 237.3)); },
+  x_uit_pv(p_v) { return 0.62198 * p_v / (this.p_atm - p_v); },
+  enthalpie(T, x) { return this.c_pa * T + x * (this.h_we + this.c_pv * T); },
+  dauwpunt(p_v) {
+    if (p_v <= 0) return null;
+    return (237.3 * Math.log(p_v / 610.78)) / (17.27 - Math.log(p_v / 610.78));
+  },
+  dauwpunt_uit_T_phi(T, phi) { return this.dauwpunt((phi / 100) * this.p_sat(T)); },
+  natte_bol(T, phi) {
+    const p_v = (phi / 100) * this.p_sat(T);
+    const x = this.x_uit_pv(p_v);
+    const h = this.enthalpie(T, x);
+    let Twb = T - 5;
+    for (let i = 0; i < 50; i++) {
+      const p_sat_wb = this.p_sat(Twb);
+      const x_wb = this.x_uit_pv(p_sat_wb);
+      const h_wb = this.enthalpie(Twb, x_wb);
+      const delta = h - h_wb;
+      if (Math.abs(delta) < 0.001) break;
+      Twb += delta / 4.0;
+      if (Twb < -10) { Twb = -10; break; }
+    }
+    return Twb;
+  },
+  dichtheid(T, x) {
+    const T_K = T + 273.15;
+    const p_v = x * this.p_atm / (0.62198 + x);
+    return ((this.p_atm - p_v) / (this.R_lucht * T_K)) * (1 + x);
+  },
+  alle_grootheden(T, phi, V_dot) {
+    const p_v = (phi / 100) * this.p_sat(T);
+    const x = this.x_uit_pv(p_v);
+    const h = this.enthalpie(T, x);
+    return {
+      T, phi, p_v, x, h,
+      T_dauw: this.dauwpunt(p_v),
+      T_wb: this.natte_bol(T, phi),
+      rho: this.dichtheid(T, x),
+      V_dot,
+      m_dot_lucht: this.dichtheid(T, x) * V_dot,
+      m_dot_water: this.dichtheid(T, x) * V_dot * x
+    };
+  },
+  condensatie(V_dot, T, phi, T_surf) {
+    const T_dauw = this.dauwpunt_uit_T_phi(T, phi);
+    if (T_dauw === null || T_surf >= T_dauw) return { m_dot_condens: 0, T_dauw, heeft_condens: false };
+    const x_in = this.x_uit_pv((phi / 100) * this.p_sat(T));
+    const m_lucht = this.dichtheid(T, x_in) * V_dot;
+    const x_opp = this.x_uit_pv(this.p_sat(T_surf));
+    let m = m_lucht * (x_in - x_opp);
+    return { m_dot_condens: m < 0 ? 0 : m, T_dauw, heeft_condens: true };
+  }
+};
+
+/* =========================================================
+   3. DOM & SYNC
+   ========================================================= */
+const els = {
+  flow: document.getElementById('flow'), flowSlider: document.getElementById('flowSlider'),
+  temp: document.getElementById('temp'), tempSlider: document.getElementById('tempSlider'),
+  phi: document.getElementById('phi'), phiSlider: document.getElementById('phiSlider'),
+  surf: document.getElementById('surf'), surfSlider: document.getElementById('surfSlider'),
+  resultBody: document.getElementById('resultBody'),
+  condInfo: document.getElementById('condInfo'), condBox: document.getElementById('condBox'),
+  serverBox: document.getElementById('serverBox'), serverAdvice: document.getElementById('serverAdvice'),
+  summary: document.getElementById('summary'), status: document.getElementById('status'),
+  canvas: document.getElementById('canvas')
+};
+
+function syncPair(inputEl, sliderEl) {
+  inputEl.addEventListener('input', () => { sliderEl.value = inputEl.value; bereken(); });
+  sliderEl.addEventListener('input', () => { inputEl.value = sliderEl.value; bereken(); });
+}
+syncPair(els.flow, els.flowSlider);
+syncPair(els.temp, els.tempSlider);
+syncPair(els.phi, els.phiSlider);
+syncPair(els.surf, els.surfSlider);
+
+/* =========================================================
+   4. BEREKENINGEN & SERVER ADVIES
+   ========================================================= */
+function bereken() {
+  const t = TRANSLATIONS[currentLang];
+  const T = parseFloat(els.temp.value);
+  const phi = parseFloat(els.phi.value);
+  const T_surf = parseFloat(els.surf.value);
+  const V_dot = parseFloat(els.flow.value);
+
+  if (isNaN(T) || isNaN(phi) || isNaN(T_surf) || isNaN(V_dot)) return;
+
+  const res = PSY.alle_grootheden(T, phi, V_dot);
+  const cond = PSY.condensatie(V_dot, T, phi, T_surf);
+  let Q_kW = cond.heeft_condens ? cond.m_dot_condens * 2501 / 3600 : 0;
+
+  // --- SERVER ADVIES LOGICA ---
+  let serverHtml = '';
+  let isOptimal = (T >= 18 && T <= 27 && phi >= 45 && phi <= 55);
+  
+  if (isOptimal) {
+    els.serverBox.className = 'server-box ok';
+    serverHtml += `<b>${t.serverOptimal}</b><br><br>`;
+  } else {
+    els.serverBox.className = 'server-box bad';
+    if (T < 18) serverHtml += `<b>${t.serverTooCold}</b><br>`;
+    if (T > 27) serverHtml += `<b>${t.serverTooHot}</b><br>`;
+    if (phi < 45) serverHtml += `<b>${t.serverTooDry}</b><br>`;
+    if (phi > 55) serverHtml += `<b>${t.serverTooHumid}</b><br>`;
+    serverHtml += `<br>`;
+  }
+  serverHtml += `<div style="color:#ffd700; font-size:0.9em; margin-top:5px;">${t.serverAdvies}</div>`;
+  els.serverAdvice.innerHTML = serverHtml;
+
+  // --- TABEL ---
+  const rows = [
+    { type: 'data', label: t.rows[0], value: V_dot.toFixed(1), unit: t.units.m3h },
+    { type: 'data', label: t.rows[1], value: res.T.toFixed(1), unit: t.units.c },
+    { type: 'data', label: t.rows[2], value: res.phi.toFixed(0), unit: t.units.pct },
+    { type: 'data', label: t.rows[3], value: res.p_v.toFixed(0), unit: t.units.pa },
+    { type: 'data', label: t.rows[4], value: res.x.toFixed(4), unit: t.units.kgkg },
+    { type: 'data', label: t.rows[5], value: res.h.toFixed(1), unit: t.units.kjkg },
+    { type: 'data', label: t.rows[6], value: res.T_dauw !== null ? res.T_dauw.toFixed(1) : '--', unit: t.units.c, cls: 'critical-row' },
+    { type: 'data', label: t.rows[7], value: res.T_wb.toFixed(1), unit: t.units.c },
+    { type: 'data', label: t.rows[8], value: res.rho.toFixed(3), unit: t.units.kgm3 },
+    { type: 'data', label: t.rows[9], value: res.m_dot_lucht.toFixed(1), unit: t.units.kgh },
+    { type: 'data', label: t.rows[10], value: res.m_dot_water.toFixed(3), unit: t.units.kgh },
+    { type: 'section', label: t.condSection },
+    { type: 'data', label: t.surfTemp, value: T_surf.toFixed(1), unit: t.units.c },
+    { type: 'data', label: t.condensation, value: cond.m_dot_condens.toFixed(3), unit: t.units.kgh, cls: 'warning-row' },
+    { type: 'data', label: t.condensation, value: (cond.m_dot_condens * 24).toFixed(3), unit: t.day, cls: 'warning-row' },
+    { type: 'data', label: t.condensation, value: (cond.m_dot_condens * 720).toFixed(1), unit: t.month, cls: 'warning-row' },
+    { type: 'data', label: t.cooling, value: Q_kW.toFixed(2), unit: t.units.kw },
+    { type: 'data', label: t.status, value: cond.heeft_condens ? t.yes : t.no, unit: '', cls: cond.heeft_condens ? 'warning-row' : '' }
+  ];
+
+  let html = '';
+  rows.forEach(r => {
+    if (r.type === 'section') html += `<tr class="section-row"><td colspan="3">${r.label}</td></tr>`;
+    else html += `<tr class="${r.cls || ''}"><td>${r.label}</td><td>${r.value}</td><td>${r.unit}</td></tr>`;
+  });
+  els.resultBody.innerHTML = html;
+
+  // Condensatie-box
+  let condHtml = `🌡️ ${t.rows[6]}: ${res.T_dauw !== null ? res.T_dauw.toFixed(1) + t.units.c : '--'}<br>`;
+  condHtml += `💧 ${t.rows[4]}: ${res.x.toFixed(4)} ${t.units.kgkg}<br>`;
+  condHtml += `💨 ${t.rows[0]}: ${V_dot.toFixed(0)} ${t.units.m3h}<br>`;
+  condHtml += `💧 ${t.rows[10]}: ${res.m_dot_water.toFixed(3)} ${t.units.kgh}<br><br>`;
+
+  if (cond.heeft_condens) {
+    condHtml += `<b>${t.yesCond}</b><br>`;
+    condHtml += `❄️ ${t.surfTemp}: ${T_surf.toFixed(1)}${t.units.c}<br>`;
+    condHtml += `📉 ${t.deltaT}${(res.T_dauw - T_surf).toFixed(1)}${t.units.c}<br><br>`;
+    condHtml += `<b>${t.condAmount}</b><br>`;
+    condHtml += `• ${cond.m_dot_condens.toFixed(3)} ${t.units.kgh}<br>`;
+    condHtml += `• ${(cond.m_dot_condens * 24).toFixed(3)} ${t.day}<br>`;
+    condHtml += `• ${(cond.m_dot_condens * 720).toFixed(1)} ${t.month}<br><br>`;
+    condHtml += `❄️ ${t.cooling}: ${Q_kW.toFixed(2)} ${t.units.kw}`;
+    els.condBox.className = 'info-box red';
+  } else {
+    condHtml += `<b>${t.noCond}</b><br>`;
+    if (res.T_dauw !== null) condHtml += `📈 ${(T_surf - res.T_dauw).toFixed(1)}${t.units.c}`;
+    els.condBox.className = 'info-box green';
+  }
+  els.condInfo.innerHTML = condHtml;
+
+  // Samenvatting
+  els.summary.innerHTML = `
+    🌡️ ${t.rows[1]}: <b>${T.toFixed(1)}${t.units.c}</b><br>
+    💧 ${t.rows[2]}: <b>${phi.toFixed(0)}${t.units.pct}</b><br>
+    💧 ${t.rows[6]}: <b>${res.T_dauw !== null ? res.T_dauw.toFixed(1) + t.units.c : '--'}</b><br>
+    📊 ${t.rows[5]}: <b>${res.h.toFixed(1)} ${t.units.kjkg}</b><br>
+    ${cond.heeft_condens
+      ? `💧 ${t.condAmount} <b style="color:#ff6b6b">${cond.m_dot_condens.toFixed(3)} ${t.units.kgh}</b>`
+      : t.noCond}
+  `;
+
+  // Statusbalk
+  els.status.innerHTML = `${t.analyzed}T=${T.toFixed(1)}${t.units.c}, φ=${phi.toFixed(0)}${t.units.pct} | ${t.rows[6]}=${res.T_dauw !== null ? res.T_dauw.toFixed(1) + t.units.c : '--'} | V=${V_dot.toFixed(0)} ${t.units.m3h} | ${cond.heeft_condens ? '💧 ' + cond.m_dot_condens.toFixed(3) + ' ' + t.units.kgh : t.noCond}`;
+
+  tekenGrafiek(res, T_surf, cond, t);
+}
+
+/* =========================================================
+   5. GRAFIEK
+   ========================================================= */
+function tekenGrafiek(res, T_surf, cond, t) {
+  const c = els.canvas, ctx = c.getContext('2d');
+  const W = c.clientWidth, H = c.clientHeight;
+  c.width = W * window.devicePixelRatio;
+  c.height = H * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const margin = 50, pw = W - 2 * margin, ph = H - 2 * margin;
+  ctx.fillStyle = '#0a0a1a'; ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(margin, margin); ctx.lineTo(margin, H - margin);
+  ctx.moveTo(margin, H - margin); ctx.lineTo(W - margin, H - margin);
+  ctx.stroke();
+
+  ctx.fillStyle = '#00d2ff'; ctx.font = '11px Arial';
+  ctx.save(); ctx.translate(margin - 15, H / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center'; ctx.fillText('h (kJ/kg)', 0, 0); ctx.restore();
+  ctx.textAlign = 'center';
+  ctx.fillText('x (kg/kg)', W / 2, H - margin + 20);
+
+  const x_max = 0.035, h_max = 120;
+  const xs = pw / x_max, hs = ph / h_max * 0.9;
+
+  ctx.strokeStyle = '#e94560'; ctx.lineWidth = 3; ctx.beginPath();
+  let started = false;
+  for (let T = -10; T <= 50; T += 0.5) {
+    const x = PSY.x_uit_pv(PSY.p_sat(T));
+    const h = PSY.enthalpie(T, x);
+    if (x >= 0 && x <= x_max && h >= 0 && h <= h_max) {
+      const px = margin + x * xs, py = H - margin - h * hs;
+      if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+  }
+  ctx.stroke();
+
+  ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.strokeStyle = '#3498db';
+  [20, 40, 60, 80].forEach(phiVal => {
+    ctx.beginPath(); started = false;
+    for (let T = -10; T <= 50; T += 0.5) {
+      const p_v = (phiVal / 100) * PSY.p_sat(T);
+      const x = PSY.x_uit_pv(p_v);
+      const h = PSY.enthalpie(T, x);
+      if (x >= 0 && x <= x_max && h >= 0 && h <= h_max) {
+        const px = margin + x * xs, py = H - margin - h * hs;
+        if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  if (res.x >= 0 && res.x <= x_max && res.h >= 0 && res.h <= h_max) {
+    const px = margin + res.x * xs, py = H - margin - res.h * hs;
+    ctx.fillStyle = '#e94560'; ctx.beginPath(); ctx.arc(px, py, 8, 0, 2 * Math.PI); ctx.fill();
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.arc(px, py, 18, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    
+    const label = `${res.T.toFixed(1)}${t.units.c}, φ=${res.phi.toFixed(0)}${t.units.pct}\nh=${res.h.toFixed(1)} ${t.units.kjkg}`;
+    const lines = label.split('\n');
+    ctx.font = '10px Arial';
+    const textW = Math.max(...lines.map(l => ctx.measureText(l).width)) + 12;
+    ctx.fillStyle = 'rgba(26,26,46,0.95)'; ctx.strokeStyle = '#e94560';
+    ctx.fillRect(px + 20, py - 30, textW, lines.length * 14 + 8);
+    ctx.strokeRect(px + 20, py - 30, textW, lines.length * 14 + 8);
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+    lines.forEach((l, i) => ctx.fillText(l, px + 26, py - 30 + 16 + i * 14));
+  }
+
+  if (res.T_dauw !== null) {
+    const x_d = PSY.x_uit_pv(PSY.p_sat(res.T_dauw));
+    const h_d = PSY.enthalpie(res.T_dauw, x_d);
+    if (x_d >= 0 && x_d <= x_max && h_d >= 0 && h_d <= h_max) {
+      const px_d = margin + x_d * xs, py_d = H - margin - h_d * hs;
+      const px = margin + res.x * xs, py = H - margin - res.h * hs;
+      ctx.strokeStyle = '#ff6bff'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px_d, py_d); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#ff6bff'; ctx.beginPath(); ctx.arc(px_d, py_d, 6, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#ff6bff'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'left';
+      ctx.fillText(`${res.T_dauw.toFixed(1)}${t.units.c}`, px_d - 30, py_d + 22);
+    }
+  }
+
+  const lx = margin + 10, ly = margin + 10;
+  ctx.fillStyle = 'rgba(26,26,46,0.95)'; ctx.fillRect(lx, ly, 210, 110);
+  ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 1; ctx.strokeRect(lx, ly, 210, 110);
+  ctx.fillStyle = '#ffd700'; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'left';
+  ctx.fillText(t.legend, lx + 10, ly + 18);
+
+  ctx.strokeStyle = '#e94560'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(lx + 10, ly + 35); ctx.lineTo(lx + 35, ly + 35); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = '10px Arial'; ctx.fillText(t.satLine, lx + 42, ly + 39);
+
+  ctx.strokeStyle = '#3498db'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(lx + 10, ly + 55); ctx.lineTo(lx + 35, ly + 55); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#fff'; ctx.fillText(t.phiLine, lx + 42, ly + 59);
+
+  ctx.strokeStyle = '#ff6bff'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(lx + 10, ly + 75); ctx.lineTo(lx + 35, ly + 75); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#fff'; ctx.fillText(t.dewLine, lx + 42, ly + 79);
+
+  if (cond.heeft_condens) {
+    ctx.fillStyle = '#ff6b6b'; ctx.fillRect(lx + 10, ly + 90, 25, 12);
+    ctx.font = 'bold 10px Arial'; ctx.fillText(t.condActive, lx + 42, ly + 100);
+  }
+}
+
+/* =========================================================
+   6. INIT
+   ========================================================= */
+window.addEventListener('resize', () => { if (els.temp.value) bereken(); });
+window.addEventListener('DOMContentLoaded', () => {
+  const browserLang = navigator.language.split('-')[0];
+  const select = document.getElementById('langSelect');
+  if (TRANSLATIONS[browserLang]) {
+    select.value = browserLang;
+    changeLanguage(browserLang);
+  } else {
+    changeLanguage('nl');
+  }
+});
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('SW:', reg.scope))
+        .catch(err => console.error('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>

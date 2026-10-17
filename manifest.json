@@ -1,0 +1,46 @@
+{
+  "name": "Mollier hx Server Tool",
+  "short_name": "Mollier entalphie",
+  "description": "The Mollier diagram as an engineering benchmark for server environments  The Mollier h/x diagram serves as a benchmark that translates humidity, heating time, and cooling efficiency into enthalpy (kJ/kg). For server rooms, maintaining a relative humidity between 45% and 55% is essential to guarantee optimal efficiency and to extend the lifespan of electronic components.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#3de70d",
+  "lang": "nl",
+  "dir": "ltr",
+  "categories": [
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
