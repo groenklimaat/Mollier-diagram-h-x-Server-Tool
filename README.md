@@ -1,31 +1,33 @@
-# Mollier hx Server Tool
+# 💧 Mollier h/x Server Tool
 
-Progressieve webapplicatie (PWA) — werkt offline en kan geïnstalleerd worden op telefoon, tablet of computer.
+A **multilingual**, **client-side** psychrometric calculator for server rooms and HVAC engineers.  
+Calculate dew point, condensation, cooling capacity and psychrometric properties — and get **instant ASHRAE-based advice** for optimal server room conditions.
 
-## Bestanden
+> **Optimal server room climate:** `18 – 27 °C` and `45 – 55 % RH`  
+> *(ASHRAE TC 9.9 — Thermal Guidelines for Data Processing Environments)*
 
-| Bestand | Doel |
-|---|---|
-| `index.html` | De app zelf |
-| `manifest.json` | App-manifest (naam, iconen, kleuren) |
-| `service-worker.js` | Offline caching |
-| `privacy.html` | Privacyverklaring |
-| `handleiding.html` | Gebruikershandleiding |
-| `icon-192.png` | App-icoon 192×192 |
-| `icon-512.png` | App-icoon 512×512 |
-| `icon-maskable-512.png` | Maskable icoon 512×512 |
-| `icon.svg` | Optioneel vectorieel icoon |
+---
 
-## Installeren als app
+## ✨ Features
 
-- **Android (Chrome/Edge):** menu → "App installeren"
-- **iPhone/iPad (Safari):** Deel-icoon → "Zet op beginscherm"
-- **Desktop (Chrome/Edge):** installeer-icoon in de adresbalk
+- 🌍 **14 languages** — English, Dutch, French, German, Spanish, Italian, Finnish, Norwegian, Chinese, Japanese, Vietnamese, Polish, Ukrainian, Arabic (with full RTL support).
+- 📊 **Real-time psychrometric calculations** — dew point, wet bulb, enthalpy, absolute humidity, density, partial vapor pressure.
+- ❄️ **Condensation analysis** — mass of condensate (kg/h, kg/day, kg/month) and cooling power (kW).
+- 🖥️ **Server room advice** — automatic ASHRAE check (18–27 °C, 45–55 % RH) with clear warnings for ESD, corrosion, overheating and overcooling.
+- 📈 **Interactive Mollier h/x diagram** — saturation curve, constant RH lines, dew point projection, live state point.
+- 🧠 **Built for programmers & sysadmins** — no installation, no server, no backend. Just open the HTML file.
+- 🎨 **Modern dark UI** — clean, responsive, mobile-friendly.
+- 🖼️ **Custom SVG favicon** — lightweight, scalable.
 
-## Offline gebruik
+---
 
-Na de eerste keer laden werkt de app ook zonder internetverbinding.
+## 🚀 Quick Start
 
-## Privacy
+1. **Clone the repo** or download `mollier-server-tool.html`.
+2. **Open it** in any modern browser (Chrome, Firefox, Edge, Safari).
+3. **That's it.** No dependencies, no build step, no server.
 
-Zie `privacy.html` voor meer informatie.
+```bash
+git clone https://github.com/<your-username>/mollier-server-tool.git
+cd mollier-server-tool
+# Open mollier-server-tool.html in your browser
